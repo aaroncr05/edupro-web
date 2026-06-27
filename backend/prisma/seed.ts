@@ -1,9 +1,46 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcrypt'
 
 const prisma = new PrismaClient()
 
 async function main() {
   console.log('🌱 Starting seed...')
+
+  // --- ROLES ---
+  const roles = [
+    { nombre: 'administrador', descripcion: 'Acceso total al sistema' },
+    { nombre: 'gerente_comercial', descripcion: 'Gestión comercial y reportes' },
+    { nombre: 'asesor_ventas', descripcion: 'Gestión de leads y cotizaciones' },
+    { nombre: 'atencion_cliente', descripcion: 'Soporte y atención post-venta' },
+    { nombre: 'cliente', descripcion: 'Acceso de cliente' },
+  ]
+
+  for (const r of roles) {
+    await prisma.rol.upsert({
+      where: { nombre: r.nombre },
+      update: {},
+      create: r
+    })
+  }
+  console.log('✅ Roles created')
+
+  // --- ADMIN USER ---
+  const adminRol = await prisma.rol.findUnique({ where: { nombre: 'administrador' } })
+  if (adminRol) {
+    const hash = await bcrypt.hash('Admin123!', 10)
+    await prisma.usuario.upsert({
+      where: { email: 'admin@edupro.com' },
+      update: {},
+      create: {
+        email: 'admin@edupro.com',
+        password: hash,
+        nombre: 'Administrador',
+        rolId: adminRol.id,
+        activo: true
+      }
+    })
+    console.log('✅ Admin user created: admin@edupro.com / Admin123!')
+  }
 
   // --- SETTINGS ---
   const settings = [
