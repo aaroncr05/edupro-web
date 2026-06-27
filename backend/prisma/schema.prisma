@@ -1,0 +1,458 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS - Tipos de datos personalizados
+// ============================================
+
+enum UserRole {
+  administrador
+  asesor_ventas
+  atencion_cliente
+  gerente_comercial
+  cliente
+}
+
+enum LeadStatus {
+  nuevo
+  contactado
+  interesado
+  calificado
+  propuesta_enviada
+  negociacion
+  convertido
+  rechazado
+  perdido
+}
+
+enum QuotationStatus {
+  borrador
+  enviada
+  vista
+  aceptada
+  rechazada
+  expirada
+}
+
+enum CaseStatus {
+  abierto
+  en_progreso
+  en_espera
+  resuelto
+  cerrado
+  reabierto
+}
+
+enum CasePriority {
+  bajo
+  medio
+  alto
+  critico
+}
+
+enum FollowupType {
+  llamada_telefonica
+  email
+  reunion
+  visita_sitio
+  propuesta_enviada
+  negociacion
+}
+
+enum ActionType {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  EXPORT
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  code      String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([code])
+}
+
+// ============================================
+// MODELS - Tablas de la base de datos
+// ============================================
+
+/// Roles del sistema con permisos
+model Rol {
+  id          Int       @id @default(autoincrement())
+  nombre      String    @unique
+  descripcion String?
+  permisos    Json      @default("[]")
+  usuarios    Usuario[]
+  createdAt   DateTime  @default(now())
+
+  @@map("roles")
+}
+
+/// Usuarios del sistema
+model Usuario {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String    @map("contraseña_hash")
+  nombre       String
+  rolId        Int       @map("id_rol")
+  fotoPerfil   String?   @map("foto_perfil")
+  telefono     String?
+  activo       Boolean   @default(true)
+  ultimoAcceso DateTime? @map("ultimo_acceso")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  rol                 Rol                 @relation(fields: [rolId], references: [id])
+  leadsAsignados      ClienteLead[]       @relation("AsesorVentas")
+  casosResponsable    CasoPostVenta[]     @relation("ResponsableCaso")
+  seguimientos        SeguimientoLead[]
+  notificaciones      Notificacion[]
+  actividadRegistros  RegistroActividad[]
+  tareasAutomatizadas TareaAutomatizada[]
+  formularios         Formulario[]
+  contenidos          ContenidoWeb[]
+  PlantillaEmail      PlantillaEmail[]
+
+  @@index([email])
+  @@index([rolId])
+  @@map("usuarios")
+}
+
+/// Prospectos de ventas (Leads)
+model ClienteLead {
+  id            Int        @id @default(autoincrement())
+  nombre        String
+  email         String     @unique
+  telefono      String?
+  empresa       String?
+  cargo         String?
+  presupuesto   Decimal?   @db.Decimal(10, 2)
+  estadoLead    LeadStatus @default(nuevo) @map("estado_lead")
+  probabilidad  Int        @default(30)
+  idAsesor      Int?       @map("id_asesor")
+  esCliente     Boolean    @default(false) @map("es_cliente")
+  convertidoClienteEn DateTime? @map("convertido_cliente_en")
+  habilitadoMarketing Boolean @default(false) @map("habilitado_marketing")
+  segmentoMarketing   String?  @map("segmento_marketing")
+  fechaIngresoMarketing DateTime? @map("fecha_ingreso_marketing")
+  ultimoEnvioMarketing DateTime? @map("ultimo_envio_marketing")
+  notas         String?
+  fechaContacto DateTime?  @map("fecha_contacto")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  asesor               Usuario?              @relation("AsesorVentas", fields: [idAsesor], references: [id], onDelete: SetNull)
+  cotizaciones         Cotizacion[]
+  seguimientos         SeguimientoLead[]
+  respuestasFormulario RespuestaFormulario[]
+  casosPostVenta       CasoPostVenta[]
+
+  @@index([email])
+  @@index([estadoLead])
+  @@index([idAsesor])
+  @@index([createdAt])
+  @@map("clientes_leads")
+}
+
+/// Cotizaciones generadas
+model Cotizacion {
+  id               Int             @id @default(autoincrement())
+  numeroCotizacion String          @unique @map("numero_cotizacion")
+  idLead           Int             @map("id_lead")
+  montoTotal       Decimal         @map("monto_total") @db.Decimal(10, 2)
+  moneda           String          @default("USD")
+  estadoCotizacion QuotationStatus @default(borrador) @map("estado_cotizacion")
+  pdfUrl           String?         @map("pdf_url")
+  fechaVencimiento DateTime?       @map("fecha_vencimiento")
+  notas            String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  enviadoEn        DateTime?       @map("enviado_en")
+  aceptadoEn       DateTime?       @map("aceptado_en")
+  rechazadoEn      DateTime?       @map("rechazado_en")
+
+  lead           ClienteLead      @relation(fields: [idLead], references: [id], onDelete: Cascade)
+  items          CotizacionItem[]
+  casosPostVenta CasoPostVenta[]
+
+  @@index([idLead])
+  @@index([estadoCotizacion])
+  @@index([numeroCotizacion])
+  @@map("cotizaciones")
+}
+
+/// Items de una cotización
+model CotizacionItem {
+  id             Int     @id @default(autoincrement())
+  idCotizacion   Int     @map("id_cotizacion")
+  descripcion    String
+  cantidad       Decimal @db.Decimal(10, 2)
+  precioUnitario Decimal @map("precio_unitario") @db.Decimal(10, 2)
+  subtotal       Decimal @db.Decimal(10, 2)
+
+  cotizacion Cotizacion @relation(fields: [idCotizacion], references: [id], onDelete: Cascade)
+
+  @@index([idCotizacion])
+  @@map("cotizacion_items")
+}
+
+/// Seguimiento de leads
+model SeguimientoLead {
+  id                 Int          @id @default(autoincrement())
+  idLead             Int          @map("id_lead")
+  idUsuario          Int?         @map("id_usuario")
+  tipoSeguimiento    FollowupType @map("tipo_seguimiento")
+  descripcion        String
+  resultado          String?
+  proximaAccion      String?      @map("proxima_accion")
+  fechaProximaAccion DateTime?    @map("fecha_proxima_accion")
+  createdAt          DateTime     @default(now())
+
+  lead    ClienteLead @relation(fields: [idLead], references: [id], onDelete: Cascade)
+  usuario Usuario?    @relation(fields: [idUsuario], references: [id], onDelete: SetNull)
+
+  @@index([idLead])
+  @@index([idUsuario])
+  @@map("seguimiento_leads")
+}
+
+/// Conversaciones de captacion desde WhatsApp
+model WhatsappLeadConversation {
+  id            Int      @id @default(autoincrement())
+  phone         String   @unique
+  profileName   String?  @map("profile_name")
+  step          String   @default("nombre")
+  data          Json     @default("{}")
+  completed     Boolean  @default(false)
+  leadId        Int?     @map("lead_id")
+  lastMessageAt DateTime @default(now()) @map("last_message_at")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([phone])
+  @@index([completed])
+  @@map("whatsapp_lead_conversations")
+}
+
+/// Casos de post-venta
+model CasoPostVenta {
+  id               Int          @id @default(autoincrement())
+  numeroCaso       String       @unique @map("numero_caso")
+  idCliente        Int          @map("id_cliente")
+  idCotizacion     Int?         @map("id_cotizacion")
+  titulo           String
+  descripcion      String
+  estadoCaso       CaseStatus   @default(abierto) @map("estado_caso")
+  prioridad        CasePriority @default(medio)
+  idResponsable    Int?         @map("id_responsable")
+  fechaVencimiento DateTime?    @map("fecha_vencimiento")
+  resolucion       String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  cerradoEn        DateTime?    @map("cerrado_en")
+
+  cliente     ClienteLead @relation(fields: [idCliente], references: [id])
+  cotizacion  Cotizacion? @relation(fields: [idCotizacion], references: [id], onDelete: SetNull)
+  responsable Usuario?    @relation("ResponsableCaso", fields: [idResponsable], references: [id], onDelete: SetNull)
+
+  @@index([idCliente])
+  @@index([estadoCaso])
+  @@index([prioridad])
+  @@index([idResponsable])
+  @@map("casos_postventa")
+}
+
+/// Formularios dinámicos
+model Formulario {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  campos      Json
+  activo      Boolean  @default(true)
+  createdBy   Int?     @map("created_by")
+  createdAt   DateTime @default(now())
+
+  creador    Usuario?              @relation(fields: [createdBy], references: [id])
+  respuestas RespuestaFormulario[]
+
+  @@map("formularios")
+}
+
+/// Respuestas a formularios
+model RespuestaFormulario {
+  id           Int      @id @default(autoincrement())
+  idFormulario Int      @map("id_formulario")
+  respuestas   Json
+  idLead       Int?     @map("id_lead")
+  createdAt    DateTime @default(now())
+
+  formulario Formulario   @relation(fields: [idFormulario], references: [id])
+  lead       ClienteLead? @relation(fields: [idLead], references: [id], onDelete: SetNull)
+
+  @@index([idFormulario])
+  @@index([idLead])
+  @@map("respuestas_formulario")
+}
+
+/// Notificaciones del sistema
+model Notificacion {
+  id        Int      @id @default(autoincrement())
+  idUsuario Int      @map("id_usuario")
+  tipo      String
+  titulo    String
+  mensaje   String
+  leida     Boolean  @default(false)
+  enlace    String?
+  createdAt DateTime @default(now())
+
+  usuario Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+
+  @@index([idUsuario])
+  @@index([leida])
+  @@map("notificaciones")
+}
+
+/// Tareas automatizadas internas del backend
+model TareaAutomatizada {
+  id               Int       @id @default(autoincrement())
+  nombre           String
+  descripcion      String?
+  workflowId       String    @map("workflow_id")
+  tipoTrigger      String    @map("tipo_trigger")
+  estado           Boolean   @default(true)
+  ultimaEjecucion  DateTime? @map("ultima_ejecucion")
+  proximaEjecucion DateTime? @map("proxima_ejecucion")
+  createdBy        Int?
+  createdAt        DateTime  @default(now())
+
+  creador Usuario? @relation(fields: [createdBy], references: [id])
+
+  @@map("tareas_automatizadas")
+}
+
+/// Plantillas de email
+model PlantillaEmail {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  asunto    String
+  cuerpo    String
+  variables Json?
+  activa    Boolean  @default(true)
+  createdBy Int?     @map("created_by")
+  createdAt DateTime @default(now())
+
+  creador Usuario? @relation(fields: [createdBy], references: [id])
+
+  @@map("plantillas_email")
+}
+
+/// Registro de actividades (Auditoría)
+model RegistroActividad {
+  id                Int        @id @default(autoincrement())
+  idUsuario         Int?       @map("id_usuario")
+  tablaAfectada     String     @map("tabla_afectada")
+  idRegistro        Int        @map("id_registro")
+  tipoAccion        ActionType @map("tipo_accion")
+  valoresAnteriores Json?      @map("valores_anteriores")
+  valoresNuevos     Json?      @map("valores_nuevos")
+  ipUsuario         String?    @map("ip_usuario")
+  createdAt         DateTime   @default(now())
+
+  usuario Usuario? @relation(fields: [idUsuario], references: [id], onDelete: SetNull)
+
+  @@index([idUsuario])
+  @@index([tablaAfectada])
+  @@map("registro_actividades")
+}
+
+/// Contenidos web gestionables
+model ContenidoWeb {
+  id             Int      @id @default(autoincrement())
+  pagina         String
+  seccion        String
+  contenido      String
+  seoTitle       String?  @map("seo_title")
+  seoDescription String?  @map("seo_description")
+  updatedBy      Int?     @map("updated_by")
+  updatedAt      DateTime @updatedAt
+
+  actualizador Usuario? @relation(fields: [updatedBy], references: [id])
+
+  @@index([pagina])
+  @@index([seccion])
+  @@map("contenidos_web")
+}
+
+/// Catálogo de Cursos (HU-001)
+model Curso {
+  id              Int      @id @default(autoincrement())
+  titulo          String
+  slug            String   @unique
+  descripcion     String
+  imagen          String
+  objetivos       String[]
+  dirigidoA       String   @map("dirigido_a")
+  contenido       String[]
+  precio          Decimal  @db.Decimal(10, 2)
+  activo          Boolean  @default(true)
+  linkInscripcion String?  @map("link_inscripcion")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("cursos_academicos")
+}
+
+/// Catálogo de Servicios Digitales (HU-001)
+model Servicio {
+  id              Int      @id @default(autoincrement())
+  titulo          String
+  slug            String   @unique
+  descripcion     String
+  icono           String   @default("Layout")
+  imagen          String
+  caracteristicas String[]
+  precioBase      Decimal  @map("precio_base") @db.Decimal(10, 2)
+  activo          Boolean  @default(true)
+  
+  // Beneficios destacados (editables)
+  beneficio1Titulo String?  @map("beneficio1_titulo")
+  beneficio1Desc   String?  @map("beneficio1_desc")
+  beneficio2Titulo String?  @map("beneficio2_titulo")
+  beneficio2Desc   String?  @map("beneficio2_desc")
+  beneficio3Titulo String?  @map("beneficio3_titulo")
+  beneficio3Desc   String?  @map("beneficio3_desc")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("servicios_digitales")
+}
+
+/// Configuración Global del Sitio (HU-001)
+model ConfiguracionGlobal {
+  id          Int     @id @default(autoincrement())
+  clave       String  @unique // Ej: hero_title, contact_email
+  valor       String
+  descripcion String?
+  grupo       String  // Ej: hero, contact, footer
+  tipo        String  @default("text") // text, image, number
+
+  @@map("configuracion_global")
+}
