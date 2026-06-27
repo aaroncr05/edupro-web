@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/main.ts",
     "start:dev": "tsx watch src/main.ts",
-    "build": "tsc && tsc-alias && prisma generate && prisma migrate deploy",
-    "start": "node dist/main.js",
+    "build": "tsc && tsc-alias && prisma generate",
+    "start": "sh start.sh",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:seed": "tsx prisma/seed.ts",
