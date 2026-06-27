@@ -1,8 +1,6 @@
 import { Resend } from 'resend'
 
-// Sin dominio verificado en Resend usar onboarding@resend.dev
-// Una vez verificado el dominio, cambiar a: "EduPro CRM <noreply@tudominio.com>"
-const FROM = 'EduPro CRM <onboarding@resend.dev>'
+const FROM = 'EduPro CRM <noreply@digitaleseduproperu.com>'
 
 export interface EmailOptions {
   to: string | string[]

@@ -5,13 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth.store'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield, Zap, Users } from 'lucide-react'
-
-const DEMO_CREDENTIALS = [
-  { label: 'Administrador', email: 'admin@edupro.com', password: 'admin123', color: '#FF7101', icon: Shield },
-  { label: 'Asesor de Ventas', email: 'asesor@edupro.com', password: 'asesor123', color: '#0740E4', icon: Zap },
-  { label: 'Soporte', email: 'cliente@edupro.com', password: 'cliente123', color: '#34A853', icon: Users },
-]
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Shield } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -20,20 +14,10 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: '', password: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
-  const [activeDemo, setActiveDemo] = useState<number | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-    clearError()
-    setFormError(null)
-    setActiveDemo(null)
-  }
-
-  const handleDemoClick = (idx: number) => {
-    const cred = DEMO_CREDENTIALS[idx]
-    setFormData({ email: cred.email, password: cred.password })
-    setActiveDemo(idx)
     clearError()
     setFormError(null)
   }
@@ -216,37 +200,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-white/30 text-xs">Acceso rápido por rol</span>
-            <div className="flex-1 h-px bg-white/10" />
-          </div>
-
-          {/* Demo Credentials */}
-          <div className="grid grid-cols-3 gap-2">
-            {DEMO_CREDENTIALS.map((cred, idx) => {
-              const Icon = cred.icon
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => handleDemoClick(idx)}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-xl text-xs transition-all border ${
-                    activeDemo === idx
-                      ? 'border-opacity-60 scale-95'
-                      : 'border-white/10 hover:border-white/20 hover:bg-white/5'
-                  }`}
-                  style={activeDemo === idx ? { borderColor: cred.color, background: `${cred.color}15` } : {}}
-                >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${cred.color}25` }}>
-                    <Icon size={14} style={{ color: cred.color }} />
-                  </div>
-                  <span className="text-white/60 font-medium leading-tight text-center">{cred.label}</span>
-                </button>
-              )
-            })}
-          </div>
         </div>
 
         {/* Security badge */}
