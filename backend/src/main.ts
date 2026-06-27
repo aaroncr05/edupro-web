@@ -49,7 +49,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
       imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
-      connectSrc: ["'self'", 'https://api.edupro.com'],
+      connectSrc: ["'self'", process.env.API_URL || ''].filter(Boolean),
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
@@ -94,11 +94,7 @@ app.use(cookieParser())
 const isProduction = process.env.NODE_ENV === 'production'
 
 const allowedOrigins = isProduction
-  ? [
-      'https://edupro.com',
-      'https://www.edupro.com',
-      'https://app.edupro.com'
-    ]
+  ? [] // Se configuran via CORS_ORIGIN en variables de entorno
   : [
       'http://localhost:3000',
       'http://localhost:4004',
@@ -107,7 +103,9 @@ const allowedOrigins = isProduction
     ]
 
 if (process.env.CORS_ORIGIN) {
-  allowedOrigins.push(process.env.CORS_ORIGIN)
+  // Soporta múltiples orígenes separados por coma: "https://a.com,https://b.com"
+  const origins = process.env.CORS_ORIGIN.split(',').map(o => o.trim()).filter(Boolean)
+  allowedOrigins.push(...origins)
 }
 
 app.use(cors({
