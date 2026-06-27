@@ -14,6 +14,7 @@ const getSecretKey = () => {
 }
 
 interface JWTPayload {
+  [key: string]: unknown
   userId: number
   email: string
   rol?: {
@@ -32,11 +33,11 @@ export async function generateJWT(
   rolNombre?: string,
   expiresIn: string = '7d'
 ): Promise<string> {
-  return new SignJWT({ 
-    userId, 
-    email, 
-    rol: rolNombre ? { nombre: rolNombre } : undefined 
-  } as JWTPayload)
+  return new SignJWT({
+    userId,
+    email,
+    rol: rolNombre ? { nombre: rolNombre } : undefined
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(expiresIn)

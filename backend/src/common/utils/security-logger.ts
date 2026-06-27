@@ -90,7 +90,7 @@ export const securityLog = {
   },
   
   loginFailure: (email: string, ip: string, reason: string, userAgent: string) => {
-    securityLogger.medium('Login fallido', {
+    securityLogger.warn('Login fallido', {
       event: 'LOGIN_FAILURE',
       email,
       ip,
@@ -112,7 +112,7 @@ export const securityLog = {
   
   // Recuperación de contraseña
   passwordResetRequested: (email: string, ip: string) => {
-    securityLogger.medium('Solicitud de recuperación de contraseña', {
+    securityLogger.warn('Solicitud de recuperación de contraseña', {
       event: 'PASSWORD_RESET_REQUESTED',
       email,
       ip,
@@ -131,7 +131,7 @@ export const securityLog = {
   
   // Eventos de autorización
   accessDenied: (userId: number | undefined, route: string, role: string, ip: string) => {
-    securityLogger.medium('Acceso denegado', {
+    securityLogger.warn('Acceso denegado', {
       event: 'ACCESS_DENIED',
       userId,
       route,
@@ -143,7 +143,7 @@ export const securityLog = {
   
   // Eventos críticos
   bruteForceDetected: (ip: string, attempts: number) => {
-    securityLogger.high('Posible ataque de fuerza bruta detectado', {
+    securityLogger.warn('Posible ataque de fuerza bruta detectado', {
       event: 'BRUTE_FORCE_DETECTED',
       ip,
       attempts,
@@ -152,7 +152,7 @@ export const securityLog = {
   },
   
   sqlInjectionAttempt: (ip: string, payload: string) => {
-    securityLogger.critical('Intento de SQL injection detectado', {
+    securityLogger.error('Intento de SQL injection detectado', {
       event: 'SQL_INJECTION_ATTEMPT',
       ip,
       payload,
@@ -161,7 +161,7 @@ export const securityLog = {
   },
   
   xssAttempt: (ip: string, payload: string) => {
-    securityLogger.critical('Intento de XSS detectado', {
+    securityLogger.error('Intento de XSS detectado', {
       event: 'XSS_ATTEMPT',
       ip,
       payload,
@@ -171,7 +171,7 @@ export const securityLog = {
   
   // Errores del sistema
   systemError: (error: Error, context: string) => {
-    securityLogger.critical('Error crítico del sistema', {
+    securityLogger.error('Error crítico del sistema', {
       event: 'SYSTEM_ERROR',
       context,
       error: error.message,
