@@ -49,10 +49,11 @@ export const generateCSRFTokenMiddleware = (req: Request, res: Response, next: N
   // Generar nuevo token si no existe
   if (!req.cookies.csrf_token) {
     const token = generateCSRFToken()
+    const isProduction = process.env.NODE_ENV === 'production'
     res.cookie('csrf_token', token, {
       httpOnly: false, // Necesario para que JS lo lea
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'strict',
       maxAge: 24 * 60 * 60 * 1000, // 24 horas
       path: '/'
     })
