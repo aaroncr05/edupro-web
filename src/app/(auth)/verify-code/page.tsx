@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Shield, CheckCircle } from 'lucide-react'
 import { authService } from '@/services/auth.service'
 
 export default function VerifyCodePage() {
@@ -55,7 +55,7 @@ export default function VerifyCodePage() {
     }
 
     try {
-      const result = await authService.verifyCode(email!, verificationCode)
+      await authService.verifyCode(email!, verificationCode)
       setVerified(true)
       // Guardar código en sessionStorage para usarlo en reset-password
       sessionStorage.setItem('reset_code', verificationCode)
