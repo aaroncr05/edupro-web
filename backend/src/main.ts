@@ -32,6 +32,9 @@ validateEnv()
 
 const app: Express = express()
 
+// Confiar en el proxy de Railway (necesario para req.ip correcto y rate limiting)
+app.set('trust proxy', 1)
+
 // ============================================
 // MIDDLEWARE
 // ============================================
