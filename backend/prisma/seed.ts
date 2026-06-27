@@ -33,7 +33,7 @@ async function main() {
       update: {},
       create: {
         email: 'admin@edupro.com',
-        password: hash,
+        passwordHash: hash,
         nombre: 'Administrador',
         rolId: adminRol.id,
         activo: true
