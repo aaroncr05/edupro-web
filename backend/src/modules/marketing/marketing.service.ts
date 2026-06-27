@@ -1,27 +1,11 @@
 import { PrismaClient } from '@prisma/client'
-import nodemailer from 'nodemailer'
+import { sendEmail } from '@/common/utils/email'
 
 const prisma = new PrismaClient()
 
 type MarketingSegment = 'todos' | 'cliente_acepto' | 'lead_rechazo'
 
 export class MarketingService {
-  private createTransporter() {
-    const user = process.env.EMAIL_USER
-    const password = process.env.EMAIL_PASSWORD
-
-    if (!user || !password) {
-      throw new Error('El correo de la empresa no esta configurado')
-    }
-
-    return nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: Number(process.env.EMAIL_PORT || 587),
-      secure: false,
-      auth: { user, pass: password }
-    })
-  }
-
   private buildWhere(segmento: MarketingSegment) {
     const where: any = {
       email: { not: '' }
@@ -115,17 +99,14 @@ export class MarketingService {
       throw new Error('No hay contactos en esta audiencia')
     }
 
-    const transporter = this.createTransporter()
     const sentIds: number[] = []
     const failed: Array<{ id: number; email: string; error: string }> = []
 
     for (const contact of contacts) {
       try {
-        await transporter.sendMail({
-          from: `"EduPro" <${process.env.EMAIL_FROM || process.env.EMAIL_USER}>`,
+        await sendEmail({
           to: contact.email,
           subject: asunto,
-          text: `Hola ${contact.nombre},\n\n${mensaje}\n\n${data.ctaUrl ? `${data.ctaText || 'Ver mas'}: ${data.ctaUrl}\n\n` : ''}Equipo EduPro`,
           html: `
             <div style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;color:#111827;">
               <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">

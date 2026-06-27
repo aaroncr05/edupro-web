@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import cron, { ScheduledTask } from 'node-cron'
-import nodemailer from 'nodemailer'
+import { sendEmail } from '@/common/utils/email'
 import { marketingService } from '@/modules/marketing/marketing.service'
 
 const prisma = new PrismaClient()
@@ -29,26 +29,6 @@ class AutomationsService {
   stop() {
     this.task?.stop()
     this.task = undefined
-  }
-
-  private createTransporter() {
-    const user = process.env.EMAIL_USER
-    const password = process.env.EMAIL_PASSWORD
-
-    if (!user || !password) {
-      throw new Error('Correo empresarial no configurado')
-    }
-
-    return nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: Number(process.env.EMAIL_PORT || 587),
-      secure: Number(process.env.EMAIL_PORT || 587) === 465,
-      auth: { user, pass: password }
-    })
-  }
-
-  private getFromAddress() {
-    return process.env.EMAIL_FROM || process.env.EMAIL_USER
   }
 
   private async runDueJobs() {
@@ -119,9 +99,7 @@ class AutomationsService {
       return
     }
 
-    const transporter = this.createTransporter()
-    await transporter.sendMail({
-      from: this.getFromAddress(),
+    await sendEmail({
       to: quotation.lead.email,
       subject: `Recordatorio: Cotización ${quotation.numeroCotizacion} - EduPro`,
       html: `

@@ -1,5 +1,5 @@
 import { PrismaClient, CaseStatus, CasePriority } from '@prisma/client'
-import nodemailer from 'nodemailer'
+import { sendEmail } from '@/common/utils/email'
 import { CreateCaseDTO } from './dto/create-case.dto'
 import { UpdateCaseDTO } from './dto/update-case.dto'
 import { CaseResponseDTO } from './dto/case-response.dto'
@@ -7,26 +7,6 @@ import { CaseResponseDTO } from './dto/case-response.dto'
 const prisma = new PrismaClient()
 
 export class CasesService {
-  private createTransporter() {
-    const user = process.env.EMAIL_USER
-    const password = process.env.EMAIL_PASSWORD
-
-    if (!user || !password) {
-      throw new Error('El correo empresarial no esta configurado')
-    }
-
-    return nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: Number(process.env.EMAIL_PORT || 587),
-      secure: Number(process.env.EMAIL_PORT || 587) === 465,
-      auth: { user, pass: password }
-    })
-  }
-
-  private getFromAddress() {
-    return process.env.EMAIL_FROM || process.env.EMAIL_USER
-  }
-
   private async notifySupportTeamAboutCase(caso: any) {
     const recipients = await prisma.usuario.findMany({
       where: {
@@ -532,9 +512,7 @@ export class CasesService {
       throw new Error('El cliente no tiene correo registrado')
     }
 
-    const transporter = this.createTransporter()
-    await transporter.sendMail({
-      from: this.getFromAddress(),
+    await sendEmail({
       to: caso.cliente.email,
       subject: `Documentacion de resolucion - Caso ${caso.numeroCaso}`,
       html: `
@@ -564,9 +542,7 @@ export class CasesService {
   private async sendCaseTicketNotification(caso: any) {
     if (!caso?.cliente?.email) return
 
-    const transporter = this.createTransporter()
-    await transporter.sendMail({
-      from: this.getFromAddress(),
+    await sendEmail({
       to: caso.cliente.email,
       subject: `Ticket de soporte creado - Caso ${caso.numeroCaso}`,
       html: `

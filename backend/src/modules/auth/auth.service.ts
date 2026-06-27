@@ -4,7 +4,7 @@ import { LoginDTO } from './dto/login.dto'
 import { RegisterDTO } from './dto/register.dto'
 import { AuthResponseDTO } from './dto/auth-response.dto'
 import { ResetPasswordDTO } from './dto/forgot-password.dto'
-import nodemailer from 'nodemailer'
+import { sendEmail } from '@/common/utils/email'
 import { generateJWT, verifyJWT } from '@/common/utils/jwt'
 
 const prisma = new PrismaClient()
@@ -163,18 +163,7 @@ export class AuthService {
   }
 
   private async sendVerificationEmail(email: string, code: string): Promise<void> {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: Number(process.env.EMAIL_PORT),
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-      }
-    })
-
-    await transporter.sendMail({
-      from: `"EduPro CRM" <${process.env.EMAIL_FROM}>`,
+    await sendEmail({
       to: email,
       subject: 'Código de verificación - Recuperación de contraseña',
       html: `

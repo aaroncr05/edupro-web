@@ -1,5 +1,5 @@
 import { PrismaClient, QuotationStatus, Prisma } from '@prisma/client'
-import nodemailer from 'nodemailer'
+import { sendEmail } from '@/common/utils/email'
 import PDFDocument from 'pdfkit'
 import { CreateQuotationDTO } from './dto/create-quotation.dto'
 import { UpdateQuotationDTO } from './dto/update-quotation.dto'
@@ -14,13 +14,6 @@ const formatMoney = (value: number, currency: string) =>
 export class QuotationsService {
   private isSyntheticWhatsappEmail(email?: string) {
     return !email || email.toLowerCase().endsWith('@whatsapp.local')
-  }
-
-  private getFromAddress() {
-    const configuredFrom = process.env.EMAIL_FROM
-    return configuredFrom && configuredFrom !== 'noreply@edupro.com'
-      ? configuredFrom
-      : process.env.EMAIL_USER
   }
 
   private getQuotationReminderDate() {
@@ -49,26 +42,9 @@ export class QuotationsService {
   }
 
   private assertEmailConfigured() {
-    const user = process.env.EMAIL_USER
-    const password = process.env.EMAIL_PASSWORD
-
-    if (!user || !password || user === 'your_email@gmail.com' || password === 'your_app_password') {
-      throw new Error('Correo empresarial no configurado. Configura EMAIL_USER y EMAIL_PASSWORD en backend/.env con una contraseña de aplicación de Gmail.')
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('Correo no configurado. Agrega RESEND_API_KEY en las variables de entorno.')
     }
-  }
-
-  private createTransporter() {
-    this.assertEmailConfigured()
-
-    return nodemailer.createTransport({
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: Number(process.env.EMAIL_PORT || 587),
-      secure: Number(process.env.EMAIL_PORT || 587) === 465,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-      }
-    })
   }
 
   private generateQuotationPdfBuffer(quotation: QuotationResponseDTO): Promise<Buffer> {
@@ -246,15 +222,12 @@ export class QuotationsService {
       throw new Error('Este lead no tiene un correo real registrado. Actualiza el correo del cliente antes de enviar la cotizacion.')
     }
 
-    const transporter = this.createTransporter()
+    this.assertEmailConfigured()
     const pdfBuffer = await this.generateQuotationPdfBuffer(quotation)
-    const from = this.getFromAddress()
-    const subject = `Cotizacion ${quotation.numeroCotizacion} - EduPro`
 
-    await transporter.sendMail({
-      from,
-      to: quotation.lead.email,
-      subject,
+    await sendEmail({
+      to: quotation.lead.email!,
+      subject: `Cotizacion ${quotation.numeroCotizacion} - EduPro`,
       html: `
         <div style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
           <h2 style="color: #01103B;">Hola ${quotation.lead.nombre},</h2>
@@ -265,13 +238,7 @@ export class QuotationsService {
           <p style="margin-top: 24px;">Saludos,<br/><strong>Equipo Comercial EduPro</strong></p>
         </div>
       `,
-      attachments: [
-        {
-          filename: `Cotizacion_${quotation.numeroCotizacion}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf'
-        }
-      ]
+      attachments: [{ filename: `Cotizacion_${quotation.numeroCotizacion}.pdf`, content: pdfBuffer }]
     })
 
     const updated = await this.changeQuotationStatus(
