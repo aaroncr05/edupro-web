@@ -8,7 +8,7 @@ const isProduction = process.env.NODE_ENV === 'production'
  */
 export const loginLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // 5 intentos
+  max: 20, // 20 intentos
   message: {
     success: false,
     error: 'Demasiados intentos de login. Por favor intenta de nuevo en 15 minutos'
