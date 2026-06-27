@@ -142,6 +142,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   if (!isProduction || req.path.startsWith('/api/auth/')) {
     return next()
   }
+  // Requests desde orígenes CORS permitidos (SPA cross-origin) ya están
+  // protegidas por CORS — el navegador valida el Origin y los atacantes
+  // no pueden forjarlo en XHR/fetch. CSRF es redundante en ese caso.
+  const origin = req.headers.origin || ''
+  if (origin && allowedOrigins.includes(origin)) {
+    return next()
+  }
   csrfProtection(req, res, next)
 })
 
