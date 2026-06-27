@@ -30,7 +30,7 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        data: { user: result.user },
+        data: { token: result.token, user: result.user },
         message: 'Login exitoso'
       })
     } catch (error: any) {

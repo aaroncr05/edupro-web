@@ -52,7 +52,11 @@ class AuthServiceImpl implements AuthService {
   async login(data: LoginDTO): Promise<AuthResponse> {
     try {
       const response = await apiClient.post<AuthResponse>('/auth/login', data)
-      // El token está en la cookie HttpOnly, no necesitamos almacenarlo en localStorage
+      const token = response.data?.data?.token
+      if (token && typeof document !== 'undefined') {
+        const maxAge = 7 * 24 * 60 * 60
+        document.cookie = `jwt_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`
+      }
       return response.data
     } catch (error: unknown) {
       const err = error as { response?: { data?: { error: string } } }
@@ -99,6 +103,9 @@ class AuthServiceImpl implements AuthService {
     localStorage.removeItem('user_data')
     localStorage.removeItem('reset_code')
     sessionStorage.removeItem('reset_code')
+    if (typeof document !== 'undefined') {
+      document.cookie = 'jwt_token=; path=/; max-age=0'
+    }
   }
 
   async forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
