@@ -18,6 +18,8 @@ router.post('/refresh', jwtGuard, (req, res, next) => authController.refreshToke
 
 router.get('/me', jwtGuard, (req, res, next) => authController.getCurrentUser(req, res, next))
 
+router.get('/csrf-token', (req, res, next) => authController.csrfToken(req, res, next))
+
 router.post('/logout', (req, res, next) => authController.logout(req, res, next))
 
 export default router
