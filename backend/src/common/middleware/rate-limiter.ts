@@ -80,11 +80,11 @@ export const verifyCodeLimiter: RateLimitRequestHandler = rateLimit({
 
 /**
  * Rate limiter general para API - Previene abuso general
- * 100 requests cada 15 minutos por IP
+ * 500 requests cada 15 minutos por IP
  */
 export const apiLimiter: RateLimitRequestHandler = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // 100 requests
+  max: 500, // 500 requests
   message: {
     success: false,
     error: 'Demasiadas solicitudes. Por favor intenta de nuevo en 15 minutos'
