@@ -216,9 +216,22 @@ export class AuthController {
   }
 
   async csrfToken(req: Request, res: Response, next: NextFunction) {
+    const isProduction = process.env.NODE_ENV === 'production'
+    let token = req.cookies?.csrf_token
+    if (!token) {
+      const { generateCSRFToken } = await import('@/common/middleware/csrf')
+      token = generateCSRFToken()
+      res.cookie('csrf_token', token, {
+        httpOnly: false,
+        secure: isProduction,
+        sameSite: isProduction ? 'none' as const : 'strict' as const,
+        maxAge: 24 * 60 * 60 * 1000,
+        path: '/'
+      })
+    }
     res.status(200).json({
       success: true,
-      csrfToken: req.cookies?.csrf_token,
+      csrfToken: token,
       message: 'CSRF token disponible'
     })
   }

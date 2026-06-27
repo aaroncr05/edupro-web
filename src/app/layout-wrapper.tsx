@@ -5,11 +5,22 @@ import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { ButtonWhatsappFloat, CrmSidebar, Footer, Navbar } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth.store';
+import apiClient from '@/lib/api-client';
 
 export function LayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, hasHydrated } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('csrf_token')
+    if (!stored) {
+      apiClient.get('/auth/csrf-token').then((res) => {
+        const token = res.data?.csrfToken
+        if (token) localStorage.setItem('csrf_token', token)
+      }).catch(() => {})
+    }
+  }, []);
 
   const crmRoutes = [
     '/dashboard',

@@ -15,11 +15,14 @@ const apiClient: AxiosInstance = axios.create({
 // Interceptor de solicitud
 apiClient.interceptors.request.use(
   (config) => {
-    if (typeof document !== 'undefined') {
-      const csrfToken = document.cookie
+    if (typeof window !== 'undefined') {
+      // Primero intentar leer de cookie (mismo dominio / local)
+      const fromCookie = document.cookie
         .split('; ')
         .find(row => row.startsWith('csrf_token='))
         ?.split('=')[1]
+      // Luego intentar localStorage (producción cross-origin)
+      const csrfToken = fromCookie || localStorage.getItem('csrf_token') || ''
       if (csrfToken) {
         config.headers['X-CSRF-Token'] = csrfToken
       }
