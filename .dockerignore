@@ -1,0 +1,15 @@
+node_modules
+.next
+.env
+.env.*
+*.log
+*.err.log
+backend/
+edu-pro-web-main/
+frontend/
+graphify-out/
+docs/
+.git
+.claude/
+*.pdf
+edupro-export.json

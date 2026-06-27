@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+.env.*
+*.log
+*.err.log
+logs/
+scratch/
+coverage/
+.git
