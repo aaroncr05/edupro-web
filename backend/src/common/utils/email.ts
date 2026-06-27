@@ -1,7 +1,5 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 // Sin dominio verificado en Resend usar onboarding@resend.dev
 // Una vez verificado el dominio, cambiar a: "EduPro CRM <noreply@tudominio.com>"
 const FROM = 'EduPro CRM <onboarding@resend.dev>'
@@ -15,6 +13,10 @@ export interface EmailOptions {
 }
 
 export async function sendEmail(options: EmailOptions): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY
+  if (!apiKey) throw new Error('RESEND_API_KEY no configurado en variables de entorno.')
+
+  const resend = new Resend(apiKey)
   const replyTo = options.replyTo || process.env.EMAIL_FROM
 
   const { error } = await resend.emails.send({
