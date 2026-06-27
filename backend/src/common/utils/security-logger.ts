@@ -1,25 +1,6 @@
 import winston from 'winston'
 import path from 'path'
 
-// Definir niveles de log personalizados para seguridad
-const securityLevels = {
-  levels: {
-    critical: 0,
-    high: 1,
-    medium: 2,
-    low: 3,
-    info: 4,
-    debug: 5
-  },
-  colors: {
-    critical: 'red',
-    high: 'magenta',
-    medium: 'yellow',
-    low: 'cyan',
-    info: 'green',
-    debug: 'white'
-  }
-}
 
 // Formatear logs para producción
 const productionFormat = winston.format.combine(
@@ -39,35 +20,26 @@ const developmentFormat = winston.format.combine(
   })
 )
 
-// Registrar colores para que el colorizer de Winston los reconozca
-winston.addColors(securityLevels.colors)
-
 const isProduction = process.env.NODE_ENV === 'production'
 
-// Crear logger de seguridad
+// Crear logger de seguridad con niveles estándar de Winston
 export const securityLogger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
-  levels: securityLevels.levels,
   transports: [
-    // Archivo para todos los logs de seguridad
     new winston.transports.File({
       filename: path.join('logs', 'security.log'),
       level: 'info',
       format: productionFormat,
-      maxsize: 10485760, // 10MB
+      maxsize: 10485760,
       maxFiles: 5
     }),
-    
-    // Archivo separado para eventos críticos
     new winston.transports.File({
       filename: path.join('logs', 'security-critical.log'),
-      level: 'critical',
+      level: 'error',
       format: productionFormat,
-      maxsize: 10485760, // 10MB
+      maxsize: 10485760,
       maxFiles: 10
     }),
-    
-    // Consola para desarrollo
     ...(isProduction ? [] : [
       new winston.transports.Console({
         format: developmentFormat
