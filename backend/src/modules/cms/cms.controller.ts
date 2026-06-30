@@ -1,7 +1,47 @@
 import { Request, Response } from 'express'
+import { z } from 'zod'
 import { CMSService } from './cms.service'
 
 const cmsService = new CMSService()
+
+const CreateCourseSchema = z.object({
+  titulo: z.string().min(1).max(200),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/, 'Slug solo puede contener letras minúsculas, números y guiones'),
+  descripcion: z.string().min(1),
+  imagen: z.string().min(1),
+  objetivos: z.array(z.string()).min(1),
+  dirigidoA: z.string().min(1),
+  contenido: z.array(z.string()).min(1),
+  precio: z.number().positive(),
+  activo: z.boolean().optional(),
+  linkInscripcion: z.string().url().nullable().optional()
+})
+
+const UpdateCourseSchema = CreateCourseSchema.partial()
+
+const CreateServiceSchema = z.object({
+  titulo: z.string().min(1).max(200),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/, 'Slug solo puede contener letras minúsculas, números y guiones'),
+  descripcion: z.string().min(1),
+  icono: z.string().optional(),
+  imagen: z.string().min(1),
+  caracteristicas: z.array(z.string()).min(1),
+  precioBase: z.number().positive(),
+  activo: z.boolean().optional(),
+  beneficio1Titulo: z.string().nullable().optional(),
+  beneficio1Desc: z.string().nullable().optional(),
+  beneficio2Titulo: z.string().nullable().optional(),
+  beneficio2Desc: z.string().nullable().optional()
+})
+
+const UpdateServiceSchema = CreateServiceSchema.partial()
+
+const SettingsBatchSchema = z.object({
+  settings: z.array(z.object({
+    id: z.number().int().positive(),
+    value: z.string()
+  })).min(1)
+})
 
 export class CMSController {
   // --- COURSES ---
@@ -27,18 +67,26 @@ export class CMSController {
 
   async createCourse(req: Request, res: Response) {
     try {
-      const course = await cmsService.createCourse(req.body)
+      const data = CreateCourseSchema.parse(req.body)
+      const course = await cmsService.createCourse(data)
       res.status(201).json({ success: true, data: course })
     } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ success: false, error: 'Validación fallida', details: error.errors })
+      }
       res.status(400).json({ success: false, error: error.message })
     }
   }
 
   async updateCourse(req: Request, res: Response) {
     try {
-      const course = await cmsService.updateCourse(Number(req.params.id), req.body)
+      const data = UpdateCourseSchema.parse(req.body)
+      const course = await cmsService.updateCourse(Number(req.params.id), data)
       res.json({ success: true, data: course })
     } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ success: false, error: 'Validación fallida', details: error.errors })
+      }
       res.status(400).json({ success: false, error: error.message })
     }
   }
@@ -66,27 +114,34 @@ export class CMSController {
 
   async createService(req: Request, res: Response) {
     try {
-      const service = await cmsService.createService(req.body)
+      const data = CreateServiceSchema.parse(req.body)
+      const service = await cmsService.createService(data)
       res.status(201).json({ success: true, data: service })
     } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ success: false, error: 'Validación fallida', details: error.errors })
+      }
       res.status(400).json({ success: false, error: error.message })
     }
   }
 
   async updateService(req: Request, res: Response) {
     try {
-      const service = await cmsService.updateService(Number(req.params.id), req.body)
+      const data = UpdateServiceSchema.parse(req.body)
+      const service = await cmsService.updateService(Number(req.params.id), data)
       res.json({ success: true, data: service })
     } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ success: false, error: 'Validación fallida', details: error.errors })
+      }
       res.status(400).json({ success: false, error: error.message })
     }
   }
 
   // --- SETTINGS ---
-  async getSettings(req: Request, res: Response) {
+  async getSettings(_req: Request, res: Response) {
     try {
       const settings = await cmsService.getAllSettings()
-      // Mapear campos de DB a campos esperados por el frontend
       const mapped = settings.map((s: any) => ({
         id: s.id,
         key: s.clave,
@@ -103,9 +158,13 @@ export class CMSController {
 
   async updateSettingsBatch(req: Request, res: Response) {
     try {
-      await cmsService.updateSettingsBatch(req.body.settings)
+      const { settings } = SettingsBatchSchema.parse(req.body)
+      await cmsService.updateSettingsBatch(settings)
       res.json({ success: true })
     } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ success: false, error: 'Validación fallida', details: error.errors })
+      }
       res.status(400).json({ success: false, error: error.message })
     }
   }

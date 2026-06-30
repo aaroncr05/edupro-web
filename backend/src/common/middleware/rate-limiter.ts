@@ -79,6 +79,25 @@ export const verifyCodeLimiter: RateLimitRequestHandler = rateLimit({
 })
 
 /**
+ * Rate limiter para envío de formularios públicos - Previene spam
+ * 10 envíos cada hora por IP
+ */
+export const formSubmitLimiter: RateLimitRequestHandler = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 10,
+  message: {
+    success: false,
+    error: 'Demasiados envíos. Por favor intenta de nuevo en 1 hora'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return ipKeyGenerator(req.ip || 'unknown')
+  },
+  skip: () => !isProduction
+})
+
+/**
  * Rate limiter general para API - Previene abuso general
  * 500 requests cada 15 minutos por IP
  */

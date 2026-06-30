@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { formsController } from './forms.controller'
 import { jwtGuard } from '../auth/guards/jwt.guard'
 import { requireRole } from '@/common/middleware/roles.middleware'
+import { formSubmitLimiter } from '@/common/middleware/rate-limiter'
 
 const router = Router()
 
@@ -19,7 +20,7 @@ router.get('/public/active', (req, res, next) => formsController.getActiveForms(
  * POST /forms/submit
  * Enviar respuesta de formulario
  */
-router.post('/submit', (req, res, next) => formsController.submitFormResponse(req, res, next))
+router.post('/submit', formSubmitLimiter, (req, res, next) => formsController.submitFormResponse(req, res, next))
 
 /**
  * Rutas protegidas (requieren autenticación y rol administrador)
