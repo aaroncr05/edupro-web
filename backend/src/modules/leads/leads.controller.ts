@@ -83,6 +83,27 @@ export class LeadsController {
   }
 
   /**
+   * POST /leads/public
+   * Crear lead desde formulario público — no revela si el email ya existe (anti-enumeración)
+   */
+  async createLeadPublic(req: Request, res: Response, next: NextFunction) {
+    try {
+      const validatedData = CreateLeadDTOSchema.parse(req.body)
+      await leadsService.createLead(validatedData)
+      res.status(201).json({ success: true, message: 'Solicitud recibida' })
+    } catch (error: any) {
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ success: false, error: 'Validación fallida', details: error.errors })
+      }
+      // Si el email ya existe, responder igualmente con éxito para no revelar datos
+      if (error.message?.includes('ya está registrado')) {
+        return res.status(201).json({ success: true, message: 'Solicitud recibida' })
+      }
+      res.status(400).json({ success: false, error: 'Error al procesar solicitud' })
+    }
+  }
+
+  /**
    * POST /leads
    * Crear nuevo lead
    */

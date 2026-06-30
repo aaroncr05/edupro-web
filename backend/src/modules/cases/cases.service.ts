@@ -1,5 +1,14 @@
 import { PrismaClient, CaseStatus, CasePriority } from '@prisma/client'
 import { sendEmail } from '@/common/utils/email'
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
 import { CreateCaseDTO } from './dto/create-case.dto'
 import { UpdateCaseDTO } from './dto/update-case.dto'
 import { CaseResponseDTO } from './dto/case-response.dto'
@@ -520,11 +529,11 @@ export class CasesService {
             <h2 style="color: #01103B;">Documentacion de resolucion</h2>
             <p>Hola <strong>${caso.cliente.nombre}</strong>,</p>
             <p>Te compartimos el resumen del caso <strong>${caso.numeroCaso}</strong>.</p>
-            <p><strong>Asunto:</strong> ${caso.titulo}</p>
-            <p><strong>Estado:</strong> ${caso.estadoCaso}</p>
+            <p><strong>Asunto:</strong> ${escapeHtml(caso.titulo)}</p>
+            <p><strong>Estado:</strong> ${escapeHtml(caso.estadoCaso)}</p>
             <p><strong>Resolucion aplicada:</strong></p>
             <div style="padding: 16px; border-radius: 12px; background: #f0fdf4; border: 1px solid #bbf7d0;">
-              ${caso.resolucion}
+              ${escapeHtml(caso.resolucion || '')}
             </div>
             <p style="margin-top: 20px;">Si necesitas soporte adicional, responde este correo o comunicate con nuestro equipo.</p>
             <p>Saludos,<br/><strong>Equipo EduPro</strong></p>
@@ -555,13 +564,13 @@ export class CasesService {
               <p>Hola <strong>${caso.cliente.nombre}</strong>,</p>
               <p>Hemos registrado tu caso de soporte correctamente. Este es tu numero de ticket para seguimiento:</p>
               <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 14px; padding: 16px; margin: 18px 0;">
-                <p style="margin: 0 0 8px;"><strong>Ticket:</strong> ${caso.numeroCaso}</p>
-                <p style="margin: 0 0 8px;"><strong>Asunto:</strong> ${caso.titulo}</p>
-                <p style="margin: 0 0 8px;"><strong>Prioridad:</strong> ${caso.prioridad}</p>
+                <p style="margin: 0 0 8px;"><strong>Ticket:</strong> ${escapeHtml(caso.numeroCaso)}</p>
+                <p style="margin: 0 0 8px;"><strong>Asunto:</strong> ${escapeHtml(caso.titulo)}</p>
+                <p style="margin: 0 0 8px;"><strong>Prioridad:</strong> ${escapeHtml(caso.prioridad)}</p>
                 <p style="margin: 0;"><strong>Estado:</strong> abierto</p>
               </div>
               <p><strong>Descripcion registrada:</strong></p>
-              <p style="background: #f8fafc; border-radius: 12px; padding: 14px;">${caso.descripcion}</p>
+              <p style="background: #f8fafc; border-radius: 12px; padding: 14px;">${escapeHtml(caso.descripcion || '')}</p>
               <p>Nuestro equipo revisara tu solicitud y te notificara cuando el caso sea actualizado o resuelto.</p>
               <p>Saludos,<br/><strong>Equipo EduPro</strong></p>
             </div>

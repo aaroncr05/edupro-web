@@ -79,6 +79,44 @@ export const verifyCodeLimiter: RateLimitRequestHandler = rateLimit({
 })
 
 /**
+ * Rate limiter para leads públicos - Previene registro masivo automatizado
+ * 5 leads cada 10 minutos por IP
+ */
+export const leadPublicLimiter: RateLimitRequestHandler = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutos
+  max: 5,
+  message: {
+    success: false,
+    error: 'Demasiados envíos. Por favor intenta de nuevo en 10 minutos'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return ipKeyGenerator(req.ip || 'unknown')
+  },
+  skip: () => !isProduction
+})
+
+/**
+ * Rate limiter para envío de cotizaciones por email - Previene spam
+ * 20 envíos cada hora por IP
+ */
+export const quotationEmailLimiter: RateLimitRequestHandler = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 20,
+  message: {
+    success: false,
+    error: 'Demasiados envíos de cotizaciones. Por favor intenta de nuevo en 1 hora'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return ipKeyGenerator(req.ip || 'unknown')
+  },
+  skip: () => !isProduction
+})
+
+/**
  * Rate limiter para envío de formularios públicos - Previene spam
  * 10 envíos cada hora por IP
  */

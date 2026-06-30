@@ -491,13 +491,18 @@ export class QuotationsService {
   /**
    * Eliminar item de la cotización
    */
-  async removeQuotationItem(itemId: number): Promise<{ message: string }> {
+  async removeQuotationItem(itemId: number, quotationId: number): Promise<{ message: string }> {
     // Verificar que el item existe
     const item = await prisma.cotizacionItem.findUnique({
       where: { id: itemId }
     })
 
     if (!item) {
+      throw new Error('Item no encontrado')
+    }
+
+    // Validar que el item pertenece a la cotización indicada (previene IDOR)
+    if (item.idCotizacion !== quotationId) {
       throw new Error('Item no encontrado')
     }
 

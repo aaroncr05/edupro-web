@@ -231,16 +231,17 @@ export class QuotationsController {
    */
   async removeQuotationItem(req: Request, res: Response, next: NextFunction) {
     try {
+      const quotationId = parseInt(req.params.quotationId)
       const itemId = parseInt(req.params.itemId)
 
-      if (isNaN(itemId)) {
+      if (isNaN(itemId) || isNaN(quotationId)) {
         return res.status(400).json({
           success: false,
-          error: 'ID de item inválido'
+          error: 'ID inválido'
         })
       }
 
-      const result = await quotationsService.removeQuotationItem(itemId)
+      const result = await quotationsService.removeQuotationItem(itemId, quotationId)
 
       res.status(200).json({
         success: true,

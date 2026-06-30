@@ -3,6 +3,15 @@ import { sendEmail } from '@/common/utils/email'
 
 const prisma = new PrismaClient()
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
+}
+
 type MarketingSegment = 'todos' | 'cliente_acepto' | 'lead_rechazo'
 
 export class MarketingService {
@@ -110,15 +119,15 @@ export class MarketingService {
           html: `
             <div style="margin:0;padding:0;background:#f3f4f6;font-family:Arial,sans-serif;color:#111827;">
               <div style="max-width:640px;margin:0 auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
-                ${data.templateImage ? `<img src="${data.templateImage}" alt="EduPro" style="width:100%;height:220px;object-fit:cover;display:block;" />` : ''}
+                ${data.templateImage ? `<img src="${escapeHtml(data.templateImage)}" alt="EduPro" style="width:100%;height:220px;object-fit:cover;display:block;" />` : ''}
                 <div style="background:#01103B;padding:24px;color:#ffffff;">
                   <div style="display:inline-block;background:#FF7101;color:#ffffff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">Digitales EduPro</div>
-                  <h1 style="margin:16px 0 0;font-size:26px;line-height:1.2;">${asunto}</h1>
+                  <h1 style="margin:16px 0 0;font-size:26px;line-height:1.2;">${escapeHtml(asunto)}</h1>
                 </div>
                 <div style="padding:28px;line-height:1.7;">
-                  <p style="font-size:16px;margin:0 0 16px;">Hola <strong>${contact.nombre}</strong>,</p>
-                  <div style="font-size:15px;color:#374151;">${mensaje.replace(/\n/g, '<br />')}</div>
-                  ${data.ctaUrl ? `<a href="${data.ctaUrl}" style="display:inline-block;margin-top:24px;background:#FF7101;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700;">${data.ctaText || 'Ver mas'}</a>` : ''}
+                  <p style="font-size:16px;margin:0 0 16px;">Hola <strong>${escapeHtml(contact.nombre)}</strong>,</p>
+                  <div style="font-size:15px;color:#374151;">${escapeHtml(mensaje).replace(/\n/g, '<br />')}</div>
+                  ${data.ctaUrl ? `<a href="${escapeHtml(data.ctaUrl)}" style="display:inline-block;margin-top:24px;background:#FF7101;color:#ffffff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:700;">${escapeHtml(data.ctaText || 'Ver mas')}</a>` : ''}
                   <p style="margin-top:28px;color:#6b7280;font-size:13px;">Equipo EduPro<br/>Soluciones digitales para empresas</p>
                 </div>
               </div>
