@@ -1,12 +1,14 @@
 import { Router } from 'express'
 import { authController } from './auth.controller'
 import { jwtGuard } from './guards/jwt.guard'
+import { requirePermission } from '@/common/middleware/roles.middleware'
+import { Permission } from '@/common/constants/roles.permissions'
 
 const router = Router()
 
 router.post('/login', (req, res, next) => authController.login(req, res, next))
 
-router.post('/register', (req, res, next) => authController.register(req, res, next))
+router.post('/register', jwtGuard, requirePermission(Permission.CREATE_USERS), (req, res, next) => authController.register(req, res, next))
 
 router.post('/forgot-password', (req, res, next) => authController.forgotPassword(req, res, next))
 

@@ -159,7 +159,8 @@ export class AuthService {
   }
 
   private generateVerificationCode(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString()
+    const { randomInt } = require('crypto')
+    return randomInt(100000, 1000000).toString()
   }
 
   private async sendVerificationEmail(email: string, code: string): Promise<void> {
@@ -196,8 +197,9 @@ export class AuthService {
       where: { email }
     })
 
+    // Siempre devolver éxito para no revelar si el email existe
     if (!usuario) {
-      throw new Error('El email no está registrado')
+      return { success: true }
     }
 
     const code = this.generateVerificationCode()

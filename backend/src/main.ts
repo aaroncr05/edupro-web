@@ -151,8 +151,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 })
 
 // Body Parser
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ limit: '10mb', extended: true }))
+app.use(express.json({ limit: '1mb' }))
+app.use(express.urlencoded({ limit: '1mb', extended: true }))
 
 // Logger
 app.use(morgan('combined'))
@@ -198,65 +198,22 @@ app.use('/api/marketing', marketingRoutes)
 // CMS Routes (Courses, Services, Settings)
 app.use('/api', cmsRoutes)
 
-// Health Check Completo
-app.get('/api/health', async (req: Request, res: Response) => {
-  const startTime = Date.now()
-  
+// Health Check
+app.get('/api/health', async (_req: Request, res: Response) => {
   try {
-    // Verificar conexión a base de datos
-    let databaseStatus = 'disconnected'
-    try {
-      const { PrismaClient } = await import('@prisma/client')
-      const prisma = new PrismaClient()
-      await prisma.$queryRaw`SELECT 1`
-      databaseStatus = 'connected'
-      await prisma.$disconnect()
-    } catch (error: any) {
-      databaseStatus = `error: ${error.message}`
-    }
-
-    const healthStatus = {
-      status: databaseStatus === 'connected' ? 'healthy' : 'unhealthy',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      environment: process.env.NODE_ENV,
-      version: '1.0.0',
-      services: {
-        database: databaseStatus,
-        email: process.env.EMAIL_HOST ? 'configured' : 'not configured',
-        cors: 'enabled',
-        rateLimit: 'enabled',
-        csrf: 'enabled',
-        helmet: 'enabled'
-      },
-      checks: {
-        database: databaseStatus === 'connected',
-        env: !!process.env.DATABASE_URL && !!process.env.JWT_SECRET
-      },
-      responseTime: `${Date.now() - startTime}ms`
-    }
-
-    const statusCode = healthStatus.status === 'healthy' ? 200 : 503
-    res.status(statusCode).json(healthStatus)
-  } catch (error: any) {
-    res.status(503).json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error.message,
-      uptime: process.uptime()
-    })
+    const { PrismaClient } = await import('@prisma/client')
+    const prisma = new PrismaClient()
+    await prisma.$queryRaw`SELECT 1`
+    await prisma.$disconnect()
+    res.status(200).json({ status: 'healthy' })
+  } catch {
+    res.status(503).json({ status: 'unhealthy' })
   }
 })
 
 // Root
-app.get('/', (req: Request, res: Response) => {
-  res.status(200).json({
-    message: 'Plataforma CRM + Ventas - Digitales Edupro',
-    version: '1.0.0',
-    api: 'http://localhost:3001/api',
-    health: 'http://localhost:3001/api/health',
-    docs: 'http://localhost:3001/api-docs (próximamente)'
-  })
+app.get('/', (_req: Request, res: Response) => {
+  res.status(200).json({ message: 'EduPro CRM API' })
 })
 
 // ============================================
@@ -271,7 +228,7 @@ app.use((req: Request, res: Response) => {
   })
 })
 
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err)
   res.status(err.statusCode || 500).json({
     error: err.name || 'Internal Server Error',

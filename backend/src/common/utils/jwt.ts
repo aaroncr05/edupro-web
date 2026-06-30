@@ -62,17 +62,3 @@ export async function verifyJWT(token: string): Promise<JWTPayload | null> {
   }
 }
 
-/**
- * Verifica si un token es válido (sin decodificarlo)
- */
-export function isJWTValid(token: string): boolean {
-  try {
-    const parts = token.split('.')
-    if (parts.length !== 3) return false
-    
-    // Verificar estructura básica
-    return true
-  } catch {
-    return false
-  }
-}
