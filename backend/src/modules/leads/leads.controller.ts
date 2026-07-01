@@ -341,9 +341,15 @@ export class LeadsController {
 
       const followups = await leadsService.getLeadFollowups(leadId)
 
+      // Renombra descripcion → descripción para que coincida con el tipo del frontend
+      const mapped = followups.map((f: any) => {
+        const { descripcion, ...rest } = f
+        return { ...rest, 'descripción': descripcion }
+      })
+
       res.status(200).json({
         success: true,
-        data: followups
+        data: mapped
       })
     } catch (error: any) {
       res.status(error.message.includes('no encontrado') ? 404 : 500).json({
@@ -368,7 +374,9 @@ export class LeadsController {
         })
       }
 
-      const validatedData = CreateFollowupDTOSchema.parse(req.body)
+      // Normaliza descripción (con tilde) → descripcion antes de validación Zod
+      const body = { ...req.body, descripcion: req.body.descripcion ?? req.body['descripción'] }
+      const validatedData = CreateFollowupDTOSchema.parse(body)
       const userId = (req as any).user?.userId
       const followup = await leadsService.createLeadFollowup(leadId, userId, validatedData)
 
