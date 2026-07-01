@@ -138,9 +138,17 @@ export class AuthController {
 
   async resetPassword(req: Request, res: Response, next: NextFunction) {
     try {
+      const email = (req as any).user?.email
+      if (!email) {
+        return res.status(401).json({ success: false, error: 'Token de reset inválido o expirado' })
+      }
+
       const validatedData = ResetPasswordDTOSchema.parse(req.body)
-      const result = await authService.resetPassword(validatedData)
-      securityLog.passwordResetSuccess(validatedData.email, req.ip || 'unknown')
+      const result = await authService.resetPassword(email, validatedData.newPassword)
+      securityLog.passwordResetSuccess(email, req.ip || 'unknown')
+
+      // Limpiar el cookie de reset después de usarlo
+      res.clearCookie('jwt_token', { path: '/' })
 
       res.status(200).json({
         success: true,

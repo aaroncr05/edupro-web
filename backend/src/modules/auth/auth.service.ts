@@ -1,9 +1,9 @@
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import { PrismaClient } from '@prisma/client'
 import { LoginDTO } from './dto/login.dto'
 import { RegisterDTO } from './dto/register.dto'
 import { AuthResponseDTO } from './dto/auth-response.dto'
-import { ResetPasswordDTO } from './dto/forgot-password.dto'
 import { sendEmail } from '@/common/utils/email'
 import { generateJWT, verifyJWT } from '@/common/utils/jwt'
 
@@ -12,8 +12,8 @@ const prisma = new PrismaClient()
 export class AuthService {
   private readonly jwtExpiration = process.env.JWT_EXPIRATION || '7d'
 
-  private async generateToken(userId: number, email: string, rolNombre?: string): Promise<string> {
-    return generateJWT(userId, email, rolNombre, this.jwtExpiration)
+  private async generateToken(userId: number, email: string, rolNombre?: string, expiry?: string): Promise<string> {
+    return generateJWT(userId, email, rolNombre, expiry || this.jwtExpiration)
   }
 
   async login(data: LoginDTO): Promise<AuthResponseDTO> {
@@ -159,8 +159,7 @@ export class AuthService {
   }
 
   private generateVerificationCode(): string {
-    const { randomInt } = require('crypto')
-    return randomInt(100000, 1000000).toString()
+    return crypto.randomInt(100000, 1000000).toString()
   }
 
   private async sendVerificationEmail(email: string, code: string): Promise<void> {
@@ -225,14 +224,20 @@ export class AuthService {
       throw new Error('No hay un código de verificación pendiente para este email')
     }
 
-    if (resetToken.code !== code) {
-      throw new Error('Código inválido')
-    }
-
     if (new Date() > resetToken.expiresAt) {
       await prisma.passwordResetToken.delete({ where: { email } })
       throw new Error('Código expirado. Solicita uno nuevo')
     }
+
+    // Comparación resistente a timing attacks
+    const storedBuf = Buffer.from(resetToken.code, 'utf8')
+    const inputBuf = Buffer.from(code, 'utf8')
+    if (storedBuf.length !== inputBuf.length || !crypto.timingSafeEqual(storedBuf, inputBuf)) {
+      throw new Error('Código inválido')
+    }
+
+    // Invalidar el código OTP inmediatamente — previene replay
+    await prisma.passwordResetToken.delete({ where: { email } })
 
     const usuario = await prisma.usuario.findUnique({
       where: { email }
@@ -246,47 +251,23 @@ export class AuthService {
       where: { id: usuario.rolId }
     })
 
-    const token = await this.generateToken(usuario.id, usuario.email, rol?.nombre)
-
-    await prisma.passwordResetToken.update({
-      where: { email },
-      data: { verified: true }
-    })
+    // Token de reset de corta duración (15 min), no una sesión completa
+    const token = await this.generateToken(usuario.id, usuario.email, rol?.nombre, '15m')
 
     return { success: true, token }
   }
 
-  async resetPassword(data: ResetPasswordDTO): Promise<{ success: boolean }> {
-    const resetToken = await prisma.passwordResetToken.findUnique({
-      where: { email: data.email }
-    })
-
-    if (!resetToken) {
-      throw new Error('No hay un código de verificación pendiente para este email')
+  async resetPassword(email: string, newPassword: string): Promise<{ success: boolean }> {
+    const usuario = await prisma.usuario.findUnique({ where: { email } })
+    if (!usuario) {
+      throw new Error('Usuario no encontrado')
     }
 
-    if (resetToken.code !== data.code) {
-      throw new Error('Código inválido')
-    }
-
-    if (new Date() > resetToken.expiresAt) {
-      await prisma.passwordResetToken.delete({ where: { email: data.email } })
-      throw new Error('Código expirado. Solicita uno nuevo')
-    }
-
-    if (!resetToken.verified) {
-      throw new Error('El código no ha sido verificado')
-    }
-
-    const passwordHash = await bcrypt.hash(data.newPassword, 12)
+    const passwordHash = await bcrypt.hash(newPassword, 12)
 
     await prisma.usuario.update({
-      where: { email: data.email },
+      where: { email },
       data: { passwordHash }
-    })
-
-    await prisma.passwordResetToken.delete({
-      where: { email: data.email }
     })
 
     return { success: true }

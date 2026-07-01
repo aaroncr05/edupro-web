@@ -10,8 +10,6 @@ export const VerifyCodeDTOSchema = z.object({
 })
 
 export const ResetPasswordDTOSchema = z.object({
-  email: z.string().email('Email inválido'),
-  code: z.string().min(6, 'El código debe tener 6 dígitos'),
   newPassword: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres')
 })
 

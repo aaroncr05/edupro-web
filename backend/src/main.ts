@@ -230,9 +230,17 @@ app.use((req: Request, res: Response) => {
 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', err)
+
+  // Sanitizar errores de Prisma para no filtrar nombres de constraints ni detalles internos
+  let message = err.message || 'Un error inesperado ocurrió'
+  const isPrismaError = err.code?.startsWith?.('P') || err.constructor?.name?.includes('Prisma') || err.name?.includes('Prisma')
+  if (isPrismaError && process.env.NODE_ENV === 'production') {
+    message = 'Error interno del servidor'
+  }
+
   res.status(err.statusCode || 500).json({
     error: err.name || 'Internal Server Error',
-    message: err.message || 'Un error inesperado ocurrió',
+    message,
     statusCode: err.statusCode || 500,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   })

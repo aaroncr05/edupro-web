@@ -14,7 +14,7 @@ router.post('/forgot-password', (req, res, next) => authController.forgotPasswor
 
 router.post('/verify-code', (req, res, next) => authController.verifyCode(req, res, next))
 
-router.post('/reset-password', (req, res, next) => authController.resetPassword(req, res, next))
+router.post('/reset-password', jwtGuard, (req, res, next) => authController.resetPassword(req, res, next))
 
 router.post('/refresh', jwtGuard, (req, res, next) => authController.refreshToken(req, res, next))
 

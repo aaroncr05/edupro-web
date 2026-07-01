@@ -148,6 +148,15 @@ export class UsersController {
         })
       }
 
+      // Validar que el :id de la URL coincide con el usuario del JWT
+      const paramId = parseInt(req.params.id)
+      if (isNaN(paramId) || paramId !== userId) {
+        return res.status(403).json({
+          success: false,
+          error: 'No autorizado'
+        })
+      }
+
       const { currentPassword, newPassword } = req.body
 
       if (!currentPassword || !newPassword) {
