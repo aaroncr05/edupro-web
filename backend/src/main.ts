@@ -150,9 +150,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   csrfProtection(req, res, next)
 })
 
-// Body Parser
-app.use(express.json({ limit: '1mb' }))
-app.use(express.urlencoded({ limit: '1mb', extended: true }))
+// Body Parser — 5mb para soportar imágenes base64 en settings/batch
+app.use(express.json({ limit: '5mb' }))
+app.use(express.urlencoded({ limit: '5mb', extended: true }))
 
 // Logger
 app.use(morgan('combined'))
