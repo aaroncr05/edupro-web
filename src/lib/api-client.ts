@@ -39,13 +39,14 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Token expirado o inválido
       if (typeof window !== 'undefined') {
-        // Limpiar datos locales (excepto el token que está en HttpOnly cookie)
-        localStorage.removeItem('user_data')
-        
-        // Redirigir a login (el backend limpiará la cookie)
-        window.location.href = '/login'
+        // Solo redirigir a login desde rutas protegidas del CRM
+        const crmRoutes = ['/dashboard', '/leads', '/quotations', '/cases', '/users', '/profile', '/reports', '/forms', '/marketing']
+        const isOnCrmRoute = crmRoutes.some(route => window.location.pathname.startsWith(route))
+        if (isOnCrmRoute) {
+          localStorage.removeItem('user_data')
+          window.location.href = '/login'
+        }
       }
     }
     return Promise.reject(error)
