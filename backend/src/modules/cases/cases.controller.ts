@@ -14,7 +14,7 @@ export class CasesController {
   async getAllCases(req: Request, res: Response, next: NextFunction) {
     try {
       const page = parseInt(req.query.page as string) || 1
-      const limit = parseInt(req.query.limit as string) || 10
+      const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 10, 1), 100)
       const estado = req.query.estado as CaseStatus | undefined
       const prioridad = req.query.prioridad as CasePriority | undefined
       const idResponsable = req.query.idResponsable ? parseInt(req.query.idResponsable as string) : undefined

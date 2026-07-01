@@ -30,7 +30,7 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        data: { token: result.token, user: result.user },
+        data: { user: result.user },
         message: 'Login exitoso'
       })
     } catch (error: any) {
@@ -245,6 +245,9 @@ export class AuthController {
   }
 
   async logout(req: Request, res: Response, next: NextFunction) {
+    // Diseño stateless: el JWT sigue siendo criptográficamente válido hasta su expiración (7d).
+    // Mitigaciones activas: cookie httpOnly (token inaccesible desde JS), CORS restringido.
+    // Si se requiere revocación inmediata, implementar Redis blacklist con JTI.
     res.clearCookie('jwt_token', {
       path: '/',
       domain: process.env.NODE_ENV === 'production' && process.env.COOKIE_DOMAIN ? process.env.COOKIE_DOMAIN : undefined

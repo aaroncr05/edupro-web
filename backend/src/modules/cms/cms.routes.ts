@@ -18,8 +18,8 @@ router.get('/services/slug/:slug', (req, res) => cmsController.getServiceBySlug(
 router.post('/services', jwtGuard, requireRole('administrador'), (req, res) => cmsController.createService(req, res))
 router.put('/services/:id', jwtGuard, requireRole('administrador'), (req, res) => cmsController.updateService(req, res))
 
-// Settings - GET público, escritura requiere admin
-router.get('/settings', (req, res) => cmsController.getSettings(req, res))
+// Settings - requiere auth para evitar exposición de config interna, escritura requiere admin
+router.get('/settings', jwtGuard, (req, res) => cmsController.getSettings(req, res))
 router.post('/settings/batch', jwtGuard, requireRole('administrador'), (req, res) => cmsController.updateSettingsBatch(req, res))
 
 export default router

@@ -10,7 +10,7 @@ export class TasksController {
         return res.status(401).json({ success: false, error: 'No autenticado' })
       }
 
-      const limit = parseInt(req.query.limit as string) || 10
+      const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 10, 1), 100)
       const tasks = await tasksService.getMyAutomaticTasks(userId, limit)
 
       res.status(200).json({

@@ -24,7 +24,7 @@ export class LeadsController {
   async getAllLeads(req: Request, res: Response, next: NextFunction) {
     try {
       const page = parseInt(req.query.page as string) || 1
-      const limit = parseInt(req.query.limit as string) || 10
+      const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 10, 1), 100)
       const estado = req.query.estado as LeadStatus | undefined
       const probabilidad = req.query.probabilidad ? parseInt(req.query.probabilidad as string) : undefined
       const idAsesor = req.query.idAsesor ? parseInt(req.query.idAsesor as string) : undefined
