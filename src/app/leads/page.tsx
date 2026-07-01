@@ -853,17 +853,19 @@ function LeadsPageContent() {
                               >
                                 <Users size={14} className="text-gray-400" /> Editar Prospecto
                               </button>
-                              <button 
-                                onClick={(event) => {
-                                  event.stopPropagation()
-                                  setAssigningLead(lead)
-                                  setShowAssignModal(true)
-                                  setActiveMenuId(null)
-                                }}
-                                className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                              >
-                                <Star size={14} className="text-gray-400" /> Asignar Asesor
-                              </button>
+                              {(user?.rol?.nombre === 'administrador' || user?.rol?.nombre === 'gerente_comercial') && (
+                                <button
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    setAssigningLead(lead)
+                                    setShowAssignModal(true)
+                                    setActiveMenuId(null)
+                                  }}
+                                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                                >
+                                  <Star size={14} className="text-gray-400" /> Asignar Asesor
+                                </button>
+                              )}
                               <button 
                                 onClick={(event) => {
                                   event.stopPropagation()
