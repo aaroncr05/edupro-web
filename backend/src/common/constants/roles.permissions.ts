@@ -91,6 +91,9 @@ export const rolePermissions: Record<string, Permission[]> = {
 
   // ASESOR DE VENTAS: Gestiona leads y cotizaciones
   asesor_ventas: [
+    // Usuarios (necesario para ver lista de asesores al asignar leads)
+    Permission.VIEW_USERS,
+
     // Leads
     Permission.VIEW_LEADS,
     Permission.CREATE_LEADS,
@@ -104,6 +107,9 @@ export const rolePermissions: Record<string, Permission[]> = {
     Permission.EDIT_QUOTATIONS,
     Permission.SEND_QUOTATIONS,
     Permission.EXPORT_QUOTATIONS,
+
+    // Casos de post-venta (solo lectura para ver estado de sus clientes)
+    Permission.VIEW_CASES,
 
     // Reportes (solo lectura)
     Permission.VIEW_REPORTS,
@@ -132,6 +138,9 @@ export const rolePermissions: Record<string, Permission[]> = {
 
   // GERENTE COMERCIAL: Supervisa ventas y genera reportes
   gerente_comercial: [
+    // Usuarios (necesario para ver asesores en leads)
+    Permission.VIEW_USERS,
+
     // Leads
     Permission.VIEW_LEADS,
     Permission.EDIT_LEADS,
