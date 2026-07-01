@@ -50,6 +50,13 @@ export class CMSService {
     }
   }
 
+  async deleteCourse(id: number) {
+    const existing = await prisma.curso.findUnique({ where: { id } })
+    if (!existing) throw new Error('Curso no encontrado')
+    await prisma.curso.delete({ where: { id } })
+    return { success: true }
+  }
+
   // --- SERVICES ---
   async getAllServices(params: { activo?: boolean } = {}) {
     return await prisma.servicio.findMany({
@@ -88,6 +95,13 @@ export class CMSService {
         precioBase: data.precioBase ? Number(data.precioBase) : undefined
       }
     })
+  }
+
+  async deleteService(id: number) {
+    const existing = await prisma.servicio.findUnique({ where: { id } })
+    if (!existing) throw new Error('Servicio no encontrado')
+    await prisma.servicio.delete({ where: { id } })
+    return { success: true }
   }
 
   // --- SETTINGS ---

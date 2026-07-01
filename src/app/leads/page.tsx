@@ -58,6 +58,8 @@ function LeadsPageContent() {
   const [leads, setLeads] = useState<LeadResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [totalLeads, setTotalLeads] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 20
   const [error, setError] = useState<string | null>(null)
   const [isHydrated, setIsHydrated] = useState(false)
   
@@ -148,11 +150,11 @@ function LeadsPageContent() {
     }
   }
 
-  const fetchLeads = async () => {
+  const fetchLeads = async (page: number = 1) => {
     try {
       setIsLoading(true)
       setError(null)
-      const response = await leadsService.getAllLeads()
+      const response = await leadsService.getAllLeads(page, PAGE_SIZE)
       setLeads(response.data)
       setTotalLeads(response.pagination?.total ?? response.data.length)
     } catch (error: unknown) {
@@ -614,7 +616,7 @@ function LeadsPageContent() {
                 <p className="text-xs text-red-600 mt-1">{error}</p>
               </div>
               <button 
-                onClick={fetchLeads}
+                onClick={() => fetchLeads(currentPage)}
                 className="ml-auto px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-medium transition-colors"
               >
                 Reintentar
@@ -923,10 +925,18 @@ function LeadsPageContent() {
           
           {/* Págination */}
           <div className="p-4 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500 bg-gray-50/50">
-            <span>Mostrando {filteredLeads.length} de {totalLeads} prospectos</span>
+            <span>Pág. {currentPage} de {Math.ceil(totalLeads / PAGE_SIZE) || 1} — {totalLeads} prospectos</span>
             <div className="flex items-center gap-2">
-              <button className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50">Anterior</button>
-              <button className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50">Siguiente</button>
+              <button
+                onClick={() => { const p = currentPage - 1; setCurrentPage(p); fetchLeads(p) }}
+                disabled={currentPage <= 1 || isLoading}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >Anterior</button>
+              <button
+                onClick={() => { const p = currentPage + 1; setCurrentPage(p); fetchLeads(p) }}
+                disabled={currentPage >= Math.ceil(totalLeads / PAGE_SIZE) || isLoading}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >Siguiente</button>
             </div>
           </div>
 

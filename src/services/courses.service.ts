@@ -71,6 +71,16 @@ class CoursesService {
       throw new Error(err.response?.data?.error || 'Error al actualizar curso')
     }
   }
+
+  async deleteCourse(id: number): Promise<{ success: boolean }> {
+    try {
+      const response = await apiClient.delete(`/courses/${id}`)
+      return response.data
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error: string } } }
+      throw new Error(err.response?.data?.error || 'Error al eliminar curso')
+    }
+  }
 }
 
 export const coursesService = new CoursesService()

@@ -159,6 +159,24 @@ export class CMSController {
     }
   }
 
+  async deleteCourse(req: Request, res: Response) {
+    try {
+      await cmsService.deleteCourse(Number(req.params.id))
+      res.json({ success: true })
+    } catch (error: any) {
+      res.status(error.message.includes('no encontrado') ? 404 : 400).json({ success: false, error: error.message })
+    }
+  }
+
+  async deleteService(req: Request, res: Response) {
+    try {
+      await cmsService.deleteService(Number(req.params.id))
+      res.json({ success: true })
+    } catch (error: any) {
+      res.status(error.message.includes('no encontrado') ? 404 : 400).json({ success: false, error: error.message })
+    }
+  }
+
   // --- SETTINGS ---
   async getSettings(_req: Request, res: Response) {
     try {

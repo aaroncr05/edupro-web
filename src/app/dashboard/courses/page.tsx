@@ -247,7 +247,18 @@ export default function CoursesPage() {
                         >
                           <Edit size={16} />
                         </button>
-                        <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                        <button
+                          onClick={async () => {
+                            if (!confirm(`¿Eliminar el curso "${course.titulo}"? Esta acción no se puede deshacer.`)) return
+                            try {
+                              await coursesService.deleteCourse(course.id)
+                              fetchCourses()
+                            } catch (err) {
+                              alert(`Error al eliminar: ${err instanceof Error ? err.message : 'Error desconocido'}`)
+                            }
+                          }}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
                           <Trash2 size={16} />
                         </button>
                         <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">

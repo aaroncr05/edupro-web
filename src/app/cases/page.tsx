@@ -113,6 +113,8 @@ function CasesPageContent() {
   const [cases, setCases] = useState<CaseResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [totalCases, setTotalCases] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
+  const PAGE_SIZE = 20
   const [leads, setLeads] = useState<LeadResponse[]>([])
   const [clientSearchTerm, setClientSearchTerm] = useState('')
   const [formError, setFormError] = useState('')
@@ -146,10 +148,10 @@ function CasesPageContent() {
     fechaVencimiento: ''
   })
 
-  const fetchCases = async () => {
+  const fetchCases = async (page: number = 1) => {
     try {
       setIsLoading(true)
-      const response = await casesService.getAllCases()
+      const response = await casesService.getAllCases({ page, limit: PAGE_SIZE })
       setCases(response.data)
       setTotalCases(response.pagination?.total ?? response.data.length)
     } catch (error: unknown) {
@@ -559,10 +561,18 @@ function CasesPageContent() {
           
           {/* Págination */}
           <div className="p-4 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500 bg-gray-50/50">
-            <span>Mostrando {filteredCases.length} de {totalCases} casos</span>
+            <span>Pág. {currentPage} de {Math.ceil(totalCases / PAGE_SIZE) || 1} — {totalCases} casos</span>
             <div className="flex items-center gap-2">
-              <button className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50">Anterior</button>
-              <button className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50">Siguiente</button>
+              <button
+                onClick={() => { const p = currentPage - 1; setCurrentPage(p); fetchCases(p) }}
+                disabled={currentPage <= 1 || isLoading}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >Anterior</button>
+              <button
+                onClick={() => { const p = currentPage + 1; setCurrentPage(p); fetchCases(p) }}
+                disabled={currentPage >= Math.ceil(totalCases / PAGE_SIZE) || isLoading}
+                className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >Siguiente</button>
             </div>
           </div>
         </div>

@@ -11,12 +11,14 @@ router.get('/courses', (req, res) => cmsController.getCourses(req, res))
 router.get('/courses/slug/:slug', (req, res) => cmsController.getCourseBySlug(req, res))
 router.post('/courses', jwtGuard, requireRole('administrador'), (req, res) => cmsController.createCourse(req, res))
 router.put('/courses/:id', jwtGuard, requireRole('administrador'), (req, res) => cmsController.updateCourse(req, res))
+router.delete('/courses/:id', jwtGuard, requireRole('administrador'), (req, res) => cmsController.deleteCourse(req, res))
 
 // Services - GETs públicos, escrituras requieren admin
 router.get('/services', (req, res) => cmsController.getServices(req, res))
 router.get('/services/slug/:slug', (req, res) => cmsController.getServiceBySlug(req, res))
 router.post('/services', jwtGuard, requireRole('administrador'), (req, res) => cmsController.createService(req, res))
 router.put('/services/:id', jwtGuard, requireRole('administrador'), (req, res) => cmsController.updateService(req, res))
+router.delete('/services/:id', jwtGuard, requireRole('administrador'), (req, res) => cmsController.deleteService(req, res))
 
 // Settings - GET público (contiene configuración de la web pública), escritura requiere admin
 router.get('/settings', (req, res) => cmsController.getSettings(req, res))

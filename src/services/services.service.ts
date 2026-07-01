@@ -69,6 +69,16 @@ class ServicesService {
       throw new Error(err.response?.data?.error || 'Error al actualizar servicio')
     }
   }
+
+  async deleteService(id: number): Promise<{ success: boolean }> {
+    try {
+      const response = await apiClient.delete(`/services/${id}`)
+      return response.data
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error: string } } }
+      throw new Error(err.response?.data?.error || 'Error al eliminar servicio')
+    }
+  }
 }
 
 export const servicesService = new ServicesService()

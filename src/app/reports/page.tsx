@@ -490,13 +490,6 @@ export default function ReportsPage() {
           </div>
         </section>
 
-        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3">
-          <AlertCircle size={20} className="text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-sm text-amber-800">
-            Entregable Sprint 7 listo: panel de control, indicadores de leads, reporte de cotizaciones aceptadas/no aceptadas,
-            reporte post-venta y graficos visuales con datos reales del CRM.
-          </p>
-        </div>
       </main>
     </div>
   )
