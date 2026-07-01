@@ -22,7 +22,7 @@ const CreateCourseSchema = z.object({
   objetivos: z.array(z.string()),
   dirigidoA: z.string(),
   contenido: z.array(z.string()),
-  precio: z.number().nonnegative(),
+  precio: z.coerce.number().nonnegative(),
   activo: z.boolean().optional(),
   linkInscripcion: z.string().nullable().optional()
 })
@@ -36,7 +36,7 @@ const CreateServiceSchema = z.object({
   icono: z.string().optional(),
   imagen: z.string().min(1),
   caracteristicas: z.array(z.string()),
-  precioBase: z.number().nonnegative(),
+  precioBase: z.coerce.number().nonnegative(),
   activo: z.boolean().optional(),
   beneficio1Titulo: z.string().nullable().optional(),
   beneficio1Desc: z.string().nullable().optional(),
